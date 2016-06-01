@@ -1,6 +1,4 @@
-"""
-File that contains helper functions to get occurrences out of a cron expression
-"""
+"""File that contains helper functions to get occurrences out of a cron expression"""
 import pytz
 import re
 import itertools
@@ -96,18 +94,22 @@ class Parser(object):
 
 
 class MinuteParser(Parser):
+    """Custom parser for minutes"""
     MIN_VALUE = 0
     MAX_VALUE = 59
 
 class HourParser(Parser):
+    """Custom parser for hours"""
     MIN_VALUE = 0
     MAX_VALUE = 23
 
 class MonthDayParser(Parser):
+    """Custom parser for month days"""
     MIN_VALUE = 1
     MAX_VALUE = 31
 
 class MonthParser(Parser):
+    """Custom parser for months"""
     MIN_VALUE = 1
     MAX_VALUE = 12
     REPLACEMENTS = {
@@ -126,6 +128,7 @@ class MonthParser(Parser):
     }
 
 class WeekDayParser(Parser):
+    """Custom parser for week days"""
     MIN_VALUE = 0
     MAX_VALUE = 6
     REPLACEMENTS = {
@@ -162,8 +165,7 @@ def parse_cron(expression):
     return result
 
 def process(expresion, start_date, end_date=None):
-    """
-    Given a cron expresion and a start/end date returns an rrule
+    """Given a cron expresion and a start/end date returns an rrule
     Works with "naive" datetimes.
     """
     if start_date.tzinfo or (end_date and end_date.tzinfo):
