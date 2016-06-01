@@ -7,14 +7,14 @@ from dateutil import rrule
 
 __all__ = ["TzCronizer"]
 
- # * * * * * *
- # | | | | | |
- # | | | | | .. year (yyyy or * for any)
- # | | | | ...... day of week (0 - 6) (0 to 6 are Monday to Sunday)
- # | | | ........... month (1 - 12)
- # | | ................ day of month (1 - 31)
- # | ..................... hour (0 - 23)
- # .......................... min (0 - 59)
+# * * * * * *
+# | | | | | |
+# | | | | | .. year (yyyy or * for any)
+# | | | | ...... day of week (1 - 7) (1 to 7 are Monday to Sunday)
+# | | | ........... month (1 - 12)
+# | | ................ day of month (1 - 31)
+# | ..................... hour (0 - 23)
+# .......................... min (0 - 59)
 
 
 class InvalidExpression(Exception):
@@ -132,16 +132,16 @@ class MonthParser(Parser):
 
 class WeekDayParser(Parser):
     """Custom parser for week days"""
-    MIN_VALUE = 0
-    MAX_VALUE = 6
+    MIN_VALUE = 1
+    MAX_VALUE = 7
     REPLACEMENTS = {
-        "MON": "0",
-        "TUE": "1",
-        "WED": "2",
-        "THU": "3",
-        "FRI": "4",
-        "SAT": "5",
-        "SUN": "6"
+        "MON": "1",
+        "TUE": "2",
+        "WED": "3",
+        "THU": "4",
+        "FRI": "5",
+        "SAT": "6",
+        "SUN": "7"
     }
 
 
@@ -163,7 +163,8 @@ def parse_cron(expression):
     if month != "*":
         result["bymonth"] = MonthParser.parse(month)
     if weekday != "*":
-        result["byweekday"] = WeekDayParser.parse(weekday)
+        # rrule uses 0 to 6 for monday to sunday
+        result["byweekday"] = [d - 1 for d in WeekDayParser.parse(weekday)]
 
     return result
 
@@ -220,7 +221,7 @@ class TzCronizer(object):
     occurrence of the schedule
 
     The cronizer provides no support for DST change times. It will throw an
-    exception is a schedule falls into a DST change period.
+    exception if a schedule falls into a DST change period.
 
     Filters allow to specify a filtering condition for the occurrence
     See year filter for an example

@@ -39,7 +39,7 @@ class TestCronizer(unittest.TestCase):
         self.assertEqual(str(expected_time), str(next_it))
 
     def test_friday_at_5(self):
-        cron_expression = "0 5 * * 4 *"
+        cron_expression = "0 5 * * 5 *"
         timezone = pytz.utc
         start = dt.datetime.strptime('1989-04-24T05:01:00',
                                            "%Y-%m-%dT%H:%M:%S")
@@ -117,7 +117,8 @@ class TestInvalidCronizers(unittest.TestCase):
         "* 24 * * * *",
         "* * 32 * * *",
         "* * * 13 * *",
-        "* * * * 7 *",
+        "* * * * 8 *",
+        "* * * * 0 *",
     )
     def test_invalid_number(self, expression):
         self.assertRaises(cronizer.InvalidExpression, cronizer.TzCronizer,
@@ -144,7 +145,7 @@ class TestSpecificDates(unittest.TestCase):
         self.timezone = pytz.timezone("UTC")
 
     @ddt.data(
-        "* * * * 4 *",
+        "* * * * 5 *",
         "* * * * FRI *",
         "* * * * fri *",
         "* * * jun Fri *",
@@ -159,7 +160,7 @@ class TestSpecificDates(unittest.TestCase):
         self.assertEqual(next(results) , expected_date)
 
     @ddt.data(
-        "* * * * 2 *",
+        "* * * * 3 *",
         "* * * * WED *",
         "* * * * wed *",
         "* * * * Wed *",
