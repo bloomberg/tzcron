@@ -59,9 +59,9 @@ class Parser(object):
     @classmethod
     def _parse_item(cls, expression):
         """Parses one of the comma separated expressions within the full quartz"""
+        expression = expression.upper()
         for key, value in cls.REPLACEMENTS.items():
-            if key in expression.upper():
-                expression = expression.upper().replace(key, value)
+            expression = expression.replace(key, value)
         matches = cls.QUARTZ_REGEXP.match(expression)
         assert matches, "Invalid expression: {}".format(expression)
         start = matches.group("start")
@@ -72,10 +72,7 @@ class Parser(object):
             start = cls.MIN_VALUE
             end = cls.MAX_VALUE
 
-        start = int(start)
-        end = int(end)
-        step = int(step)
-        values = xrange(start, end + 1, step)
+        values = xrange(int(start), int(end) + 1, int(step))
 
         if not all(cls.MIN_VALUE <= x <= cls.MAX_VALUE for x in values):
             raise ValueError("{} produces items out of {}".format(expression, cls.__name__))
