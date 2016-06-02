@@ -16,6 +16,11 @@ __all__ = ["TzCronizer"]
  # | ..................... hour (0 - 23)
  # .......................... min (0 - 59)
 
+
+class InvalidExpression(Exception):
+    """Custom exception when we fail to parse an cron/quartz expression"""
+
+
 class Parser(object):
     """Abstract class to create parsers for parts of quartz expressions
 
@@ -63,7 +68,8 @@ class Parser(object):
         for key, value in cls.REPLACEMENTS.items():
             expression = expression.replace(key, value)
         matches = cls.QUARTZ_REGEXP.match(expression)
-        assert matches, "Invalid expression: {}".format(expression)
+        if not matches:
+            raise InvalidExpression("Invalid expression: {}".format(expression))
         start = matches.group("start")
         end = matches.group("end") or start
         step = matches.group("step") or 1
@@ -75,7 +81,7 @@ class Parser(object):
         values = xrange(int(start), int(end) + 1, int(step))
 
         if not all(cls.MIN_VALUE <= x <= cls.MAX_VALUE for x in values):
-            raise ValueError("{} produces items out of {}".format(expression, cls.__name__))
+            raise InvalidExpression("{} produces items out of {}".format(expression, cls.__name__))
 
         return values
 
@@ -144,7 +150,7 @@ def parse_cron(expression):
     try:
         minute, hour, monthday, month, weekday, _ = expression.split(' ')
     except ValueError:
-        raise ValueError("Invalid number of item in expression: {}".format(expression))
+        raise InvalidExpression("Invalid number of item in expression: {}".format(expression))
 
     result = {}
     result["bysecond"] = [0]
@@ -166,7 +172,7 @@ def process(expresion, start_date, end_date=None):
     Works with "naive" datetimes.
     """
     if start_date.tzinfo or (end_date and end_date.tzinfo):
-        raise ValueError("Timezones are forbidden in this land.")
+        raise TypeError("Timezones are forbidden in this land.")
 
     arguments = parse_cron(expresion)
 
@@ -221,7 +227,7 @@ class TzCronizer(object):
         self.end_date = end_date
 
         if start_date.tzinfo is None or (end_date and end_date.tzinfo is None):
-            raise ValueError("Start and Enddate should have a timezone")
+            raise TypeError("Start and Enddate should have a timezone")
 
         start_t = start_date.astimezone(self.t_zone)
         end_t = end_date.astimezone(self.t_zone) if end_date else None

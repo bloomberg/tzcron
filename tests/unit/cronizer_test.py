@@ -15,13 +15,6 @@ class TestCronizer(unittest.TestCase):
     def setUp(self):
         self.now = dt.datetime.now(pytz.utc)
 
-    def test_invalid_schedule(self):
-        cron_expression = "60 * * * * *"
-        timezone = pytz.utc
-        start = self.now
-        self.assertRaises(ValueError, cronizer.TzCronizer, cron_expression,
-                          timezone, start)
-
     def test_next_minute(self):
         cron_expression = "* * * * * *"
         timezone = pytz.utc
@@ -127,8 +120,8 @@ class TestInvalidCronizers(unittest.TestCase):
         "* * * * 7 *",
     )
     def test_invalid_number(self, expression):
-        self.assertRaises(Exception, cronizer.TzCronizer, expression,
-                          self.timezone, self.now)
+        self.assertRaises(cronizer.InvalidExpression, cronizer.TzCronizer,
+                          expression, self.timezone, self.now)
 
 
     @ddt.data(
@@ -139,8 +132,8 @@ class TestInvalidCronizers(unittest.TestCase):
         "* * * * DOM *",
     )
     def test_invalid_replacements(self, expression):
-        self.assertRaises(AssertionError, cronizer.TzCronizer, expression,
-                          self.timezone, self.now)
+        self.assertRaises(cronizer.InvalidExpression, cronizer.TzCronizer,
+                          expression, self.timezone, self.now)
 
 @ddt.ddt
 class TestSpecificDates(unittest.TestCase):
