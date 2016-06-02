@@ -190,7 +190,13 @@ def process(expresion, start_date, end_date=None):
 
 
 def get_year_filter(year):
+    """Creates a filter for a year"""
     def year_filter(occurrence):
+        """Filter for years
+
+        Using the year captured the closure, returns false if the occurrence
+        is before the year, true when is in the year and stops when is past
+        """
         if year == "*":
             return True
         else:
@@ -236,9 +242,8 @@ class TzCronizer(object):
         start_t = start_t.replace(tzinfo=None)
         end_t = end_t.replace(tzinfo=None) if end_t else None
 
-        self.rrule = process(expression, start_t, end_t)
-        self.rrule_iterator = iter(self.rrule)
-        self.iter_num = 0
+        self._rrule = process(expression, start_t, end_t)
+        self.__rrule_iterator = iter(self._rrule)
         self.filters = filters or []
         self.filters.append(get_year_filter(self.expression.split(" ")[-1]))
 
@@ -256,7 +261,7 @@ class TzCronizer(object):
           iteration that are not natively handled by rrule
         """
         while True:
-            next_it = next(self.rrule_iterator)
+            next_it = next(self.__rrule_iterator)
             next_it = self.t_zone.localize(next_it, is_dst=None)
 
             if not all([filt(next_it) for filt in self.filters]):
