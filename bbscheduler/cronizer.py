@@ -24,7 +24,7 @@ class InvalidExpression(Exception):
 class Parser(object):
     """Abstract class to create parsers for parts of quartz expressions
 
-    Each parser can be user per token and a specific parser needs to provides
+    Each parser can be used per token and a specific parser needs to provide
     the valid ranges of the quartz part and a dict of REPLACEMENTS in upper case
 
     See the specific parsers below (Ex: MinuteParser, WeekDayParser, etc..)
@@ -176,7 +176,7 @@ def process(expresion, start_date, end_date=None):
 
     arguments = parse_cron(expresion)
 
-    # as rrule will strip out miliseconds, we need to do this hack :)
+    # as rrule will strip out microseconds, we need to do this hack :)
     # we could use .after but that changes the iface
     if start_date.second == 0 and start_date.microsecond != 0:
         start_date = start_date + dt.timedelta(0, 1)
@@ -211,10 +211,10 @@ def get_year_filter(year):
 
 
 class TzCronizer(object):
-    """Tz Cronizer allows to get a list of occurrences given an schedule and tz
+    """Tz Cronizer allows to get a list of occurrences given a schedule and tz
 
     TzCronizer is a class that relying in dateutil.rrule generates a list of
-    occurrences given an schedule, timezone and start-end date
+    occurrences given a schedule, timezone and start-end date
 
     Once the TzCronizer is built, it is iterable. Being each element an
     occurrence of the schedule
@@ -258,7 +258,7 @@ class TzCronizer(object):
         """
         Returns the next occurrence or raises StopIteration
         This method adds some extra validation for the returned
-          iteration that are not natively handled by rrule
+        iteration that are not natively handled by rrule
         """
         while True:
             next_it = next(self.__rrule_iterator)
