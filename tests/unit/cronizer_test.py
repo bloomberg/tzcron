@@ -4,7 +4,7 @@ import random
 import pytz
 import ddt
 
-from bbscheduler import cronizer
+from scheduler import cronizer
 
 
 class TestCronizer(unittest.TestCase):
