@@ -1,3 +1,7 @@
+.. image:: https://readthedocs.org/projects/tzcron/badge/?version=latest
+   :target: http://tzcron.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 tzcron
 ######
 
@@ -29,7 +33,7 @@ datetime.datetime(2016, 9, 25, 19, 12, tzinfo=<UTC>)
 datetime.datetime(2016, 9, 25, 19, 13, tzinfo=<UTC>)
 
 
-For further information, check the `official documentation <https://readthedocs.org/projects/tzcron/>`_
+For further information, check the `official documentation <https://tzcron.readthedocs.io/en/latest/>`_
 
 
 Develop this package
