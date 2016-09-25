@@ -1,4 +1,17 @@
-"""File that contains helper functions to get occurrences out of a cron expression"""
+"""A library to work with cron/quartz expressions and timezones.
+
+The library provides a way to define schedules attached to timezones and get
+time occurrences out of it by just iterating the object created.
+
+See the Schedule class for further details
+
+The key terms used in the documentations are:
+- Schedule: Specification of a successions of occurrences
+- Occurrence: point in time that is satisfied by the specification of a schedule
+
+As an example, a schedule is every tuesday at 2pm in London,
+an occurrence is next tuesday at 2pm with an offset from utc of +60 minutes.
+"""
 import datetime as dt
 import itertools
 import re
@@ -6,7 +19,7 @@ import re
 import pytz
 from dateutil import rrule
 
-__all__ = ["TzCronizer"]
+__all__ = ["Schedule", "InvalidExpression"]
 
 
 # * * * * * *
@@ -21,6 +34,86 @@ __all__ = ["TzCronizer"]
 
 class InvalidExpression(Exception):
     """Custom exception when we fail to parse an cron/quartz expression"""
+
+
+class Schedule(object):
+    """Schedule allows to get a list of occurrences given a cron specification and tz
+
+    Schedule is a class that relying in dateutil.rrule generates a list of
+    occurrences given a schedule, timezone and start-end datetime
+
+    Once the Schedule is built, it is iterable. Being each element an
+    occurrence of the schedule
+
+    The class provides no support for occurrences falling in DST change times.
+     It will throw an exception if a schedule falls into a DST change period and advance
+     the iterator. This allows the application to decide on those situations.
+
+    Filters allow to specify a filtering condition for the occurrence
+    See the year filter as an example. A good use of it is to skip non business days
+    with a calendar.
+    """
+
+    def __init__(self, expression, t_zone, start_date=None, end_date=None, filters=None):
+        """Creates a schedule definition
+
+        :param expression: cron expression defining the schedule
+        :type expression: str
+        :param t_zone: timezone we want the schedule to be applied on
+        :type t_zone: instance of a subclass of tzinfo
+        :param start_date: inclusive date to start to generate occurrences.
+         Defaults to now
+        :type start_date: datetime (with tzinfo)
+        :param end_date: inclusive date of the last occurrence to generate.
+         Defaults to never
+        :type end_date: datetime (with tzinfo)
+        :param filters: list of extra functions to filter occurrences.
+        :type filters: list of callable
+        """
+        self.t_zone = t_zone
+        self.expression = expression
+        self.start_date = start_date or dt.datetime.now(pytz.utc)
+        self.end_date = end_date
+
+        if start_date.tzinfo is None or (end_date and end_date.tzinfo is None):
+            raise TypeError("Start and End dates should have a timezone")
+
+        start_t = start_date.astimezone(self.t_zone)
+        end_t = end_date.astimezone(self.t_zone) if end_date else None
+
+        # all datetime objects are in the desired tz. Lets strip out the timezones
+        start_t = start_t.replace(tzinfo=None)
+        end_t = end_t.replace(tzinfo=None) if end_t else None
+
+        self._rrule = process(expression, start_t, end_t)
+        self.__rrule_iterator = iter(self._rrule)
+        self.filters = filters or []
+        self.filters.append(get_year_filter(self.expression.split(" ")[-1]))
+
+    def __str__(self):
+        return "Cron: {} @{} [{}->{}]".format(self.expression, self.t_zone,
+                                              self.start_date, self.end_date)
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        """
+        Returns the next occurrence or raises StopIteration
+        This method adds some extra validation for the returned
+        iteration that are not natively handled by rrule
+        """
+        while True:
+            next_it = next(self.__rrule_iterator)
+            next_it = self.t_zone.localize(next_it, is_dst=None)
+
+            if not all([filt(next_it) for filt in self.filters]):
+                continue
+
+            return next_it
+
+
+# Private helpers
 
 
 class Parser(object):
@@ -176,17 +269,21 @@ def parse_cron(expression):
     return result
 
 
-def process(expresion, start_date, end_date=None):
-    """Given a cron expresion and a start/end date returns an rrule
-    Works with "naive" datetimes.
+def process(expression, start_date, end_date=None):
+    """Given a cron expression and a start/end date returns an rrule
+    Works with "naive" datetime objects.
     """
     if start_date.tzinfo or (end_date and end_date.tzinfo):
         raise TypeError("Timezones are forbidden in this land.")
 
-    arguments = parse_cron(expresion)
+    arguments = parse_cron(expression)
 
     # as rrule will strip out microseconds, we need to do this hack :)
     # we could use .after but that changes the iface
+    # The idea is, as the cron expresion works at minute level, it is fine to
+    # set the start time one second after the minute. The key is not to generate
+    # the current minute.
+    # Ex: if start time is 05:00.500 you should not generate 05:00
     if start_date.second == 0 and start_date.microsecond != 0:
         start_date = start_date + dt.timedelta(0, 1)
 
@@ -194,6 +291,10 @@ def process(expresion, start_date, end_date=None):
     if end_date:
         arguments["until"] = end_date
 
+    # TODO: This can be optimized to values bigger than minutely
+    # by checking if the minutes and hours are provided.
+    # After hours (rrule.DAILY) it gets trickier as we have multiple
+    # parameters affecting the recurrence (weekday/ month-day)
     return rrule.rrule(rrule.MINUTELY, **arguments)
 
 
@@ -220,61 +321,3 @@ def get_year_filter(year):
     return year_filter
 
 
-class TzCronizer(object):
-    """Tz Cronizer allows to get a list of occurrences given a schedule and tz
-
-    TzCronizer is a class that relying in dateutil.rrule generates a list of
-    occurrences given a schedule, timezone and start-end date
-
-    Once the TzCronizer is built, it is iterable. Being each element an
-    occurrence of the schedule
-
-    The cronizer provides no support for DST change times. It will throw an
-    exception if a schedule falls into a DST change period.
-
-    Filters allow to specify a filtering condition for the occurrence
-    See year filter for an example
-    """
-
-    def __init__(self, expression, t_zone, start_date=None, end_date=None, filters=None):
-        self.t_zone = t_zone
-        self.expression = expression
-        self.start_date = start_date or dt.datetime.now(pytz.utc)
-        self.end_date = end_date
-
-        if start_date.tzinfo is None or (end_date and end_date.tzinfo is None):
-            raise TypeError("Start and Enddate should have a timezone")
-
-        start_t = start_date.astimezone(self.t_zone)
-        end_t = end_date.astimezone(self.t_zone) if end_date else None
-
-        # all datetimes are in the desired tz. Lets strip out the timezones
-        start_t = start_t.replace(tzinfo=None)
-        end_t = end_t.replace(tzinfo=None) if end_t else None
-
-        self._rrule = process(expression, start_t, end_t)
-        self.__rrule_iterator = iter(self._rrule)
-        self.filters = filters or []
-        self.filters.append(get_year_filter(self.expression.split(" ")[-1]))
-
-    def __str__(self):
-        return "Cron: {} @{} [{}->{}]".format(self.expression, self.t_zone,
-                                              self.start_date, self.end_date)
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        """
-        Returns the next occurrence or raises StopIteration
-        This method adds some extra validation for the returned
-        iteration that are not natively handled by rrule
-        """
-        while True:
-            next_it = next(self.__rrule_iterator)
-            next_it = self.t_zone.localize(next_it, is_dst=None)
-
-            if not all([filt(next_it) for filt in self.filters]):
-                continue
-
-            return next_it
