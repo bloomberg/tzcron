@@ -1,7 +1,7 @@
 """A library to work with cron/quartz expressions and timezones.
 
 The library provides a way to define schedules attached to timezones and get
-time occurrences out of it by just iterating the object created.
+ time occurrences out of it by just iterating the object created.
 
 See the Schedule class for further details
 
@@ -10,12 +10,13 @@ The key terms used in the documentations are:
 - Occurrence: point in time that is satisfied by the specification of a schedule
 
 As an example, a schedule is every tuesday at 2pm in London,
-an occurrence is next tuesday at 2pm with an offset from utc of +60 minutes.
+ an occurrence is next tuesday at 2pm with an offset from utc of +60 minutes.
 """
 import datetime as dt
 import itertools
 import re
 
+import six
 import pytz
 from dateutil import rrule
 
@@ -36,7 +37,7 @@ class InvalidExpression(Exception):
     """Custom exception when we fail to parse an cron/quartz expression"""
 
 
-class Schedule(object):
+class Schedule(six.Iterator):
     """Schedule allows to get a list of occurrences given a cron specification and tz
 
     Schedule is a class that relying in dateutil.rrule generates a list of
@@ -97,7 +98,7 @@ class Schedule(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         """
         Returns the next occurrence or raises StopIteration
         This method adds some extra validation for the returned
@@ -120,7 +121,7 @@ class Parser(object):
     """Abstract class to create parsers for parts of quartz expressions
 
     Each parser can be used per token and a specific parser needs to provide
-    the valid ranges of the quartz part and a dict of REPLACEMENTS in upper case
+     the valid ranges of the quartz part and a dict of REPLACEMENTS in upper case
 
     See the specific parsers below (Ex: MinuteParser, WeekDayParser, etc..)
 
@@ -128,8 +129,8 @@ class Parser(object):
         A star can be used to specify all valid values
 
     Multiple options:
-        Each of the expression parsed can contain a list of expressions as a comma separated
-        list. duplicates are removed
+        Each of the expression parsed can contain a list of expressions as
+         a comma separated list. duplicates are removed
         Example: 0,1,4 Means 0, 1 and 4
 
     Ranges:
@@ -173,7 +174,7 @@ class Parser(object):
             start = cls.MIN_VALUE
             end = cls.MAX_VALUE
 
-        values = xrange(int(start), int(end) + 1, int(step))
+        values = six.moves.range(int(start), int(end) + 1, int(step))
 
         if not all(cls.MIN_VALUE <= x <= cls.MAX_VALUE for x in values):
             raise InvalidExpression("{} produces items out of {}"

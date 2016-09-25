@@ -7,9 +7,9 @@ import pytz
 import tzcron
 
 
-class TestCronizer(unittest.TestCase):
+class TestSchedule(unittest.TestCase):
     """
-    Test suite for the cornizer module
+    Test suite for the tzcron module
     """
 
     def setUp(self):
@@ -103,7 +103,7 @@ class TestCronizer(unittest.TestCase):
 
 
 @ddt.ddt
-class TestInvalidCronizers(unittest.TestCase):
+class TestInvalidSchedules(unittest.TestCase):
     """Test suite for invalid expressions"""
 
     def setUp(self):
