@@ -84,9 +84,11 @@ class Schedule(six.Iterator):
         :param filters: list of extra functions to filter occurrences.
         :type filters: list of callable
         """
+        start_date = start_date or dt.datetime.now(pytz.utc)  # starts defaults to now
+
         self.t_zone = t_zone
         self.expression = expression
-        self.start_date = start_date or dt.datetime.now(pytz.utc)
+        self.start_date = start_date
         self.end_date = end_date
 
         if start_date.tzinfo is None or (end_date and end_date.tzinfo is None):
@@ -264,7 +266,7 @@ def parse_cron(expression):
     try:
         minute, hour, monthday, month, weekday, _ = expression.split(' ')
     except ValueError:
-        raise InvalidExpression("Invalid number of item in expression: {}"
+        raise InvalidExpression("Invalid number of items in expression: {}"
                                 .format(expression))
     result = dict()
     result["bysecond"] = [0]
