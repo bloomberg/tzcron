@@ -1,11 +1,13 @@
 """File that contains helper functions to get occurrences out of a cron expression"""
-import pytz
-import re
-import itertools
 import datetime as dt
+import itertools
+import re
+
+import pytz
 from dateutil import rrule
 
 __all__ = ["TzCronizer"]
+
 
 # * * * * * *
 # | | | | | |
@@ -81,7 +83,8 @@ class Parser(object):
         values = xrange(int(start), int(end) + 1, int(step))
 
         if not all(cls.MIN_VALUE <= x <= cls.MAX_VALUE for x in values):
-            raise InvalidExpression("{} produces items out of {}".format(expression, cls.__name__))
+            raise InvalidExpression("{} produces items out of {}"
+                                    .format(expression, cls.__name__))
 
         return values
 
@@ -101,15 +104,18 @@ class MinuteParser(Parser):
     MIN_VALUE = 0
     MAX_VALUE = 59
 
+
 class HourParser(Parser):
     """Custom parser for hours"""
     MIN_VALUE = 0
     MAX_VALUE = 23
 
+
 class MonthDayParser(Parser):
     """Custom parser for month days"""
     MIN_VALUE = 1
     MAX_VALUE = 31
+
 
 class MonthParser(Parser):
     """Custom parser for months"""
@@ -129,6 +135,7 @@ class MonthParser(Parser):
         "NOV": "11",
         "DEC": "12"
     }
+
 
 class WeekDayParser(Parser):
     """Custom parser for week days"""
@@ -150,9 +157,9 @@ def parse_cron(expression):
     try:
         minute, hour, monthday, month, weekday, _ = expression.split(' ')
     except ValueError:
-        raise InvalidExpression("Invalid number of item in expression: {}".format(expression))
-
-    result = {}
+        raise InvalidExpression("Invalid number of item in expression: {}"
+                                .format(expression))
+    result = dict()
     result["bysecond"] = [0]
     if minute != "*":
         result["byminute"] = MinuteParser.parse(minute)
@@ -167,6 +174,7 @@ def parse_cron(expression):
         result["byweekday"] = [d - 1 for d in WeekDayParser.parse(weekday)]
 
     return result
+
 
 def process(expresion, start_date, end_date=None):
     """Given a cron expresion and a start/end date returns an rrule
@@ -189,9 +197,9 @@ def process(expresion, start_date, end_date=None):
     return rrule.rrule(rrule.MINUTELY, **arguments)
 
 
-
 def get_year_filter(year):
     """Creates a filter for a year"""
+
     def year_filter(occurrence):
         """Filter for years
 
@@ -208,6 +216,7 @@ def get_year_filter(year):
                 raise StopIteration("Valid time already past")
             else:
                 return True
+
     return year_filter
 
 

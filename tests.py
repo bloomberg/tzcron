@@ -1,8 +1,8 @@
-import unittest
 import datetime as dt
-import random
-import pytz
+import unittest
+
 import ddt
+import pytz
 
 import tzcron
 
@@ -42,13 +42,13 @@ class TestCronizer(unittest.TestCase):
         cron_expression = "0 5 * * 5 *"
         timezone = pytz.utc
         start = dt.datetime.strptime('1989-04-24T05:01:00',
-                                           "%Y-%m-%dT%H:%M:%S")
+                                     "%Y-%m-%dT%H:%M:%S")
         start = start.replace(tzinfo=timezone)
         testee = tzcron.TzCronizer(cron_expression, timezone, start)
         next_it = next(testee)
 
         expected_time = dt.datetime.strptime('1989-04-28T05:00:00',
-                                                   "%Y-%m-%dT%H:%M:%S")
+                                             "%Y-%m-%dT%H:%M:%S")
         expected_time = expected_time.replace(tzinfo=timezone)
         self.assertEqual(str(expected_time), str(next_it))
 
@@ -56,13 +56,13 @@ class TestCronizer(unittest.TestCase):
         cron_expression = "30 5 * * * *"
         timezone = pytz.timezone("Europe/London")
         start = dt.datetime.strptime('2015-03-29T00:00:00',
-                                           "%Y-%m-%dT%H:%M:%S")
+                                     "%Y-%m-%dT%H:%M:%S")
         start = timezone.localize(start, is_dst=False)
         testee = tzcron.TzCronizer(cron_expression, timezone, start)
         next_it = next(testee)
 
         expected_time = dt.datetime.strptime('2015-03-29T05:30:00',
-                                                   "%Y-%m-%dT%H:%M:%S")
+                                             "%Y-%m-%dT%H:%M:%S")
         expected_time = timezone.localize(expected_time, is_dst=True)
         self.assertEqual(str(expected_time), str(next_it))
 
@@ -71,7 +71,7 @@ class TestCronizer(unittest.TestCase):
         cron_expression = "30 1 * * * *"
         timezone = pytz.timezone("Europe/London")
         start = dt.datetime.strptime('2015-03-29T00:00:00',
-                                           "%Y-%m-%dT%H:%M:%S")
+                                     "%Y-%m-%dT%H:%M:%S")
         start = timezone.localize(start, is_dst=False)
         testee = tzcron.TzCronizer(cron_expression, timezone, start)
         self.assertRaises(pytz.NonExistentTimeError,
@@ -81,13 +81,13 @@ class TestCronizer(unittest.TestCase):
         cron_expression = "30 5 * * * *"
         timezone = pytz.timezone("Europe/London")
         start = dt.datetime.strptime('2015-10-25T00:00:00',
-                                           "%Y-%m-%dT%H:%M:%S")
+                                     "%Y-%m-%dT%H:%M:%S")
         start = timezone.localize(start, is_dst=True)
         testee = tzcron.TzCronizer(cron_expression, timezone, start)
         next_it = next(testee)
 
         expected_time = dt.datetime.strptime('2015-10-25T05:30:00',
-                                                   "%Y-%m-%dT%H:%M:%S")
+                                             "%Y-%m-%dT%H:%M:%S")
         expected_time = timezone.localize(expected_time, is_dst=False)
         self.assertEqual(str(expected_time), str(next_it))
 
@@ -95,7 +95,7 @@ class TestCronizer(unittest.TestCase):
         cron_expression = "30 1 * * * *"
         timezone = pytz.timezone("Europe/London")
         start = dt.datetime.strptime('2015-10-25T00:00:00',
-                                           "%Y-%m-%dT%H:%M:%S")
+                                     "%Y-%m-%dT%H:%M:%S")
         start = timezone.localize(start, is_dst=True)
         testee = tzcron.TzCronizer(cron_expression, timezone, start)
         self.assertRaises(pytz.AmbiguousTimeError,
@@ -124,7 +124,6 @@ class TestInvalidCronizers(unittest.TestCase):
         self.assertRaises(tzcron.InvalidExpression, tzcron.TzCronizer,
                           expression, self.timezone, self.now)
 
-
     @ddt.data(
         "* * * LUN * *",
         "* * * mon * *",
@@ -135,6 +134,7 @@ class TestInvalidCronizers(unittest.TestCase):
     def test_invalid_replacements(self, expression):
         self.assertRaises(tzcron.InvalidExpression, tzcron.TzCronizer,
                           expression, self.timezone, self.now)
+
 
 @ddt.ddt
 class TestSpecificDates(unittest.TestCase):
@@ -157,7 +157,7 @@ class TestSpecificDates(unittest.TestCase):
         results = tzcron.TzCronizer(expression, self.timezone, self.start)
 
         expected_date = dt.datetime(2016, 6, 3).replace(tzinfo=pytz.utc)
-        self.assertEqual(next(results) , expected_date)
+        self.assertEqual(next(results), expected_date)
 
     @ddt.data(
         "* * * * 3 *",
@@ -173,7 +173,7 @@ class TestSpecificDates(unittest.TestCase):
         results = tzcron.TzCronizer(expression, self.timezone, self.start)
 
         expected_date = dt.datetime(2016, 6, 1).replace(tzinfo=pytz.utc)
-        self.assertEqual(next(results) , expected_date)
+        self.assertEqual(next(results), expected_date)
 
 
 if __name__ == '__main__':
