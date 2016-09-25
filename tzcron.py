@@ -14,16 +14,17 @@
 """A library to work with cron/quartz expressions and timezones.
 
 The library provides a way to define schedules attached to timezones and get
- time occurrences out of it by just iterating the object created.
+time occurrences out of it by just iterating the object created.
 
 See the Schedule class for further details
 
 The key terms used in the documentations are:
+
 - Schedule: Specification of a successions of occurrences
 - Occurrence: point in time that is satisfied by the specification of a schedule
 
 As an example, a schedule is every tuesday at 2pm in London,
- an occurrence is next tuesday at 2pm with an offset from utc of +60 minutes.
+an occurrence is next tuesday at 2pm with an offset from utc of +60 minutes.
 """
 import datetime as dt
 import itertools
