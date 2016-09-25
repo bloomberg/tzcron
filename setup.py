@@ -20,7 +20,7 @@ setup(
     version='1.0.0',
     description='Timezone aware Cron/Quartz parser',
     license="Apache",
-    packages=['tzcron'],
+    py_modules=['tzcron'],
     install_requires=['python-dateutil', 'six', 'pytz'],
     url='https://github.com/bloomberg/tzcron',
     author='Mario Corchero',
